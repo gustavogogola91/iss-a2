@@ -10,7 +10,6 @@ public class Campeonato {
     private List<Time> times;
     private List<Partida> partidas;
 
-    // Construtor padrão necessário para o Jackson (Desserialização) [cite: 51, 57]
     public Campeonato() {
         this.times = new ArrayList<>();
         this.partidas = new ArrayList<>();
@@ -23,7 +22,6 @@ public class Campeonato {
         this.partidas = new ArrayList<>();
     }
 
-    // Getters e Setters (Encapsulamento) [cite: 50]
     public int getId() {
         return id;
     }
@@ -55,8 +53,7 @@ public class Campeonato {
     public void setPartidas(List<Partida> partidas) {
         this.partidas = partidas;
     }
-    
-    // Método utilitário para adicionar times (Regra de negócio implícita)
+
     public void adicionarTime(Time time) {
         this.times.add(time);
     }

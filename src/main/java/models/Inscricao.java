@@ -5,7 +5,6 @@ public class Inscricao {
     private int idCampeonato;
     private int idTime;
 
-    // Construtor padrão (necessário para Jackson)
     public Inscricao() {}
 
     public Inscricao(int id, int idCampeonato, int idTime) {
@@ -14,7 +13,6 @@ public class Inscricao {
         this.idTime = idTime;
     }
 
-    // Getters e Setters (Encapsulamento)
     public int getId() {
         return id;
     }

@@ -8,9 +8,8 @@ public class Partida {
     private int idCampeonato;
     private int idTimeA;
     private int idTimeB;
-    private String resultado; // Exemplo: "2 x 1"
+    private String resultado;
 
-    // Construtor padrão para o Jackson (Desserialização)
     public Partida() {}
 
     public Partida(int id, Date data, int idCampeonato, int idTimeA, int idTimeB, String resultado) {
@@ -22,7 +21,6 @@ public class Partida {
         this.resultado = resultado;
     }
 
-    // Getters e Setters (Encapsulamento)
     public int getId() {
         return id;
     }

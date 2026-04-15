@@ -12,7 +12,6 @@ public class Jogador {
         this.timeId = timeId;
     }
 
-    // Getters e Setters
     public int getId() { return id; }
     public String getNome() { return nome; }
     public int getTimeId() { return timeId; }

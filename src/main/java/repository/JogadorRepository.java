@@ -26,7 +26,7 @@ public class JogadorRepository {
                 Jogador j = new Jogador(
                         rs.getInt("id"),
                         rs.getString("nome"),
-                        rs.getInt("time_id"));
+                        rs.getInt("id_time"));
                 jogadores.add(j);
             }
         }
@@ -55,7 +55,7 @@ public class JogadorRepository {
             jogador = new Jogador(
                 rs.getInt("id"),
                 rs.getString("nome"),
-                rs.getInt("time_id")
+                rs.getInt("id_time")
             );
         }
  
@@ -63,25 +63,31 @@ public class JogadorRepository {
     }
 
     public void adicionarJogador(Jogador jogador) throws SQLException {
-        String sql = "INSERT INTO tb_jogador (nome, time_id) VALUES (?, ?)";
+        String sql = "INSERT INTO tb_jogador (nome, id_time) VALUES (?, ?)";
  
         try (Connection conn = ConnectionFactory.getConnection()) {
+
             PreparedStatement stmt = conn.prepareStatement(sql);
+
             stmt.setString(1, jogador.getNome());
             stmt.setInt(2, jogador.getTimeId());
+
             stmt.executeUpdate();
         }
     }
 
     public int alterarJogador(Jogador jogador, String id) throws SQLException {
-        String sql = "UPDATE tb_jogador SET nome = ?, time_id = ? WHERE id = ?";
+        String sql = "UPDATE tb_jogador SET nome = ?, id_time = ? WHERE id = ?";
         int idInt = Integer.parseInt(id);
  
         try (Connection conn = ConnectionFactory.getConnection()) {
+
             PreparedStatement stmt = conn.prepareStatement(sql);
+
             stmt.setString(1, jogador.getNome());
             stmt.setInt(2, jogador.getTimeId());
             stmt.setInt(3, idInt);
+
             return stmt.executeUpdate();
         }
     }
@@ -91,8 +97,11 @@ public class JogadorRepository {
         int idInt = Integer.parseInt(id);
  
         try (Connection conn = ConnectionFactory.getConnection()) {
+
             PreparedStatement stmt = conn.prepareStatement(sql);
+
             stmt.setInt(1, idInt);
+            
             return stmt.executeUpdate();
         }
     }

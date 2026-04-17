@@ -44,7 +44,7 @@ public class JogadorHandler implements HttpHandler {
                 }
                 case "DELETE" -> {
                     if (partesCaminho.length == 3) {
-                        deletarJogador(exchange, partesCaminho[1]);
+                        deletarJogador(exchange, partesCaminho[2]);
                     } else {
                         exchange.sendResponseHeaders(400, -1);
                     }

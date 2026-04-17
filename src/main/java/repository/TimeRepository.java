@@ -2,6 +2,7 @@ package repository;
 
 import data.ConnectionFactory;
 import exceptions.NotFoundException;
+import models.Jogador;
 import models.Time;
 
 import java.sql.Connection;
@@ -16,10 +17,10 @@ public class TimeRepository {
     public List<Time> listarTimes() throws SQLException {
         List<Time> times = new ArrayList<>();
 
-        String sql = "SELECT * FROM tb_time ORDER BY id ASC";
+        String sqlTime = "SELECT * FROM tb_time ORDER BY id ASC";
 
         try (Connection conn = ConnectionFactory.getConnection()) {
-            PreparedStatement stmt = conn.prepareStatement(sql);
+            PreparedStatement stmt = conn.prepareStatement(sqlTime);
             ResultSet rs = stmt.executeQuery();
 
             while (rs.next()) {
@@ -38,7 +39,8 @@ public class TimeRepository {
 
         Time time;
 
-        String sql = "SELECT * FROM tb_time WHERE id = ?";
+        String sql = "SELECT a.id as id_time, a.nome as nome_time, b.id as id_jogador, b.nome as nome_jogador " +
+                "FROM tb_time as a LEFT JOIN tb_jogador as b ON a.id = b.id_time WHERE a.id = ?";
 
         try (Connection conn = ConnectionFactory.getConnection()) {
             PreparedStatement stmt = conn.prepareStatement(sql);
@@ -54,9 +56,24 @@ public class TimeRepository {
             }
 
             time = new Time(
-                    rs.getInt("id"),
-                    rs.getString("nome")
+                    rs.getInt("id_time"),
+                    rs.getString("nome_time")
             );
+
+            List<Jogador> jogadores = new ArrayList<>();
+
+            do {
+
+                int jogadorId = rs.getInt("id_jogador");
+
+                if(!rs.wasNull()) {
+                    Jogador j = new Jogador(jogadorId, rs.getString("nome_jogador"), idInt);
+
+                    jogadores.add(j);
+                }
+            } while (rs.next());
+
+            time.setJogadores(jogadores);
         }
 
         return time;

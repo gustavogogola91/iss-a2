@@ -64,13 +64,12 @@ public class TimeRepository {
 
     public void salvarTime(Time novoTime) throws SQLException {
 
-        String sql = "INSERT INTO tb_time (id, nome) VALUES (?, ?)";
+        String sql = "INSERT INTO tb_time (nome) VALUES ( ?)";
 
         try (Connection conn = ConnectionFactory.getConnection()) {
             PreparedStatement stmt = conn.prepareStatement(sql);
 
-            stmt.setInt(1, novoTime.getId());
-            stmt.setString(2, novoTime.getNome());
+            stmt.setString(1, novoTime.getNome());
 
             stmt.executeUpdate();
         }

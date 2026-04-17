@@ -3,6 +3,7 @@ import com.sun.net.httpserver.HttpServer;
 import handlers.CampeonatoHandler;
 import handlers.InscricaoHandler;
 import handlers.JogadorHandler;
+import handlers.PartidaHandler;
 import handlers.TimeHandler;
 
 import java.net.InetSocketAddress;
@@ -15,6 +16,7 @@ public class Server {
         server.createContext("/campeonato", new CampeonatoHandler());
         server.createContext("/inscricao", new InscricaoHandler());
         server.createContext("/jogador", new JogadorHandler());
+        server.createContext("/partida", new PartidaHandler());
 
         server.setExecutor(null);
         server.start();

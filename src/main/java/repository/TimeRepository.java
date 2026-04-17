@@ -1,6 +1,7 @@
 package repository;
 
 import data.ConnectionFactory;
+import exceptions.NotFoundException;
 import models.Time;
 
 import java.sql.Connection;
@@ -31,5 +32,47 @@ public class TimeRepository {
             }
         }
         return times;
+    }
+
+    public Time buscarTimePorId(String id) throws SQLException, NotFoundException {
+
+        Time time;
+
+        String sql = "SELECT * FROM tb_time as a WHERE a.id = (?)";
+
+        try (Connection conn = ConnectionFactory.getConnection()) {
+            PreparedStatement stmt = conn.prepareStatement(sql);
+
+            int idInt = Integer.parseInt(id);
+
+            stmt.setInt(1, idInt);
+
+            ResultSet rs = stmt.executeQuery();
+
+            if(!rs.next()) {
+                throw new NotFoundException();
+            };
+
+            time = new Time(
+                    rs.getInt("id"),
+                    rs.getString("nome")
+            );
+        }
+
+        return time;
+    }
+
+    public void salvarTime(Time novoTime) throws SQLException {
+
+        String sql = "INSERT INTO tb_time (id, nome) VALUES (?, ?)";
+
+        try (Connection conn = ConnectionFactory.getConnection()) {
+            PreparedStatement stmt = conn.prepareStatement(sql);
+
+            stmt.setInt(1, novoTime.getId());
+            stmt.setString(2, novoTime.getNome());
+
+            stmt.executeUpdate();
+        }
     }
 }

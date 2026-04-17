@@ -3,6 +3,7 @@ package handlers;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
+import exceptions.NotFoundException;
 import models.Time;
 import repository.TimeRepository;
 
@@ -27,7 +28,7 @@ public class TimeHandler implements HttpHandler {
             switch (metodo) {
                 case "GET" -> {
                     if (partesCaminho.length == 3) {
-                        buscarTimePorId(exchange, partesCaminho[1]);
+                        buscarTimePorId(exchange, partesCaminho[2]);
                     } else {
                         System.out.println("Buscando times");
                         listarTimes(exchange);
@@ -45,6 +46,14 @@ public class TimeHandler implements HttpHandler {
                 default -> exchange.sendResponseHeaders(405, -1);
             }
 
+        } catch(NotFoundException e) {
+            String mensagem = "Nenhum item encontrado. ";
+            exchange.sendResponseHeaders(404, mensagem.getBytes().length);
+
+            OutputStream os = exchange.getResponseBody();
+            os.write(mensagem.getBytes());
+
+            os.close();
         } catch(Exception e) {
             String mensagem = "Ocorreu um erro no servidor. " + e.getMessage();
             exchange.sendResponseHeaders(500, mensagem.getBytes().length);
@@ -53,7 +62,6 @@ public class TimeHandler implements HttpHandler {
             os.write(mensagem.getBytes());
 
             os.close();
-
         }
     }
 
@@ -65,14 +73,35 @@ public class TimeHandler implements HttpHandler {
         enviarResposta(exchange, resposta);
     }
 
-    private void buscarTimePorId(HttpExchange exchange, String id) {
+    private void buscarTimePorId(HttpExchange exchange, String id) throws SQLException, IOException, NotFoundException {
+        Time time = _repository.buscarTimePorId(id);
+
+        String resposta = _mapper.writeValueAsString(time);
+
+        enviarResposta(exchange, resposta);
 
     }
 
-    private void adicionatTime(HttpExchange exchange) throws IOException {
-        Time mewTime = _mapper.readValue(exchange.getRequestBody(), Time.class);
+    private void adicionatTime(HttpExchange exchange) throws SQLException, IOException {
+        Time movoTime = _mapper.readValue(exchange.getRequestBody(), Time.class);
 
+        if(movoTime == null || movoTime.getNome().isBlank()) {
+            String mensagem = "Erro no objeto enviado";
+            exchange.sendResponseHeaders(400, mensagem.getBytes().length);
 
+            OutputStream os = exchange.getResponseBody();
+            os.write(mensagem.getBytes());
+
+            os.close();
+
+            return;
+        }
+
+        _repository.salvarTime(movoTime);
+
+        String resposta = "Time adicionado com sucesso";
+
+        enviarResposta(exchange, resposta);
     }
 
     private void alterarTime(HttpExchange exchange) throws IOException {

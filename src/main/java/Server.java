@@ -1,6 +1,7 @@
 import com.sun.net.httpserver.HttpServer;
 
 import handlers.CampeonatoHandler;
+import handlers.InscricaoHandler;
 import handlers.TimeHandler;
 
 import java.net.InetSocketAddress;
@@ -11,6 +12,7 @@ public class Server {
         HttpServer server = HttpServer.create(new InetSocketAddress(4321), 0);
         server.createContext("/time", new TimeHandler());
         server.createContext("/campeonato", new CampeonatoHandler());
+        server.createContext("/inscricao", new InscricaoHandler());
 
         server.setExecutor(null);
         server.start();

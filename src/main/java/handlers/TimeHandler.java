@@ -34,11 +34,17 @@ public class TimeHandler implements HttpHandler {
                         listarTimes(exchange);
                     }
                 }
-                case "POST" -> adicionatTime(exchange);
-                case "PUT" -> alterarTime(exchange);
+                case "POST" -> adicionarTime(exchange);
+                case "PUT" -> {
+                    if (partesCaminho.length == 3) {
+                        alterarTime(exchange, partesCaminho[2]);
+                    } else {
+                        exchange.sendResponseHeaders(400, -1);
+                    }
+                }
                 case "DELETE" -> {
                     if (partesCaminho.length == 3) {
-                        deletarTime(exchange, partesCaminho[1]);
+                        deletarTime(exchange, partesCaminho[2]);
                     } else {
                         exchange.sendResponseHeaders(400, -1);
                     }
@@ -82,7 +88,7 @@ public class TimeHandler implements HttpHandler {
 
     }
 
-    private void adicionatTime(HttpExchange exchange) throws SQLException, IOException {
+    private void adicionarTime(HttpExchange exchange) throws SQLException, IOException {
         Time movoTime = _mapper.readValue(exchange.getRequestBody(), Time.class);
 
         if(movoTime == null || movoTime.getNome().isBlank()) {
@@ -104,12 +110,42 @@ public class TimeHandler implements HttpHandler {
         enviarResposta(exchange, resposta);
     }
 
-    private void alterarTime(HttpExchange exchange) throws IOException {
+    private void alterarTime(HttpExchange exchange, String id) throws SQLException, IOException, NotFoundException {
+        Time timeAlterado = _mapper.readValue(exchange.getRequestBody(), Time.class);
 
+        if(timeAlterado == null || timeAlterado.getNome().isBlank()) {
+            String mensagem = "Erro no objeto enviado";
+            exchange.sendResponseHeaders(400, mensagem.getBytes().length);
+
+            OutputStream os = exchange.getResponseBody();
+            os.write(mensagem.getBytes());
+
+            os.close();
+
+            return;
+        }
+
+        int linhasAfetadas  = _repository.alterarTime(timeAlterado, id);
+
+        if(linhasAfetadas == 0) {
+            throw new NotFoundException();
+        }
+
+        String resposta = "Time alterado com sucesso";
+
+        enviarResposta(exchange, resposta);
     }
 
-    private void deletarTime(HttpExchange exchange, String id) {
+    private void deletarTime(HttpExchange exchange, String id) throws SQLException, IOException, NotFoundException {
+        int linhasAfetadas  = _repository.deletarTime(id);
 
+        if(linhasAfetadas == 0) {
+            throw new NotFoundException();
+        }
+
+        String resposta = "Time deletado com sucesso";
+
+        enviarResposta(exchange, resposta);
     }
 
     private void enviarResposta(HttpExchange exchange, String resposta) throws IOException {

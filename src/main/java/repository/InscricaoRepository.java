@@ -53,7 +53,6 @@ public class InscricaoRepository {
             if (!rs.next()) {
                 throw new NotFoundException();
             }
-            ;
 
             campeonato = new Campeonato(
                     rs.getInt("id"),
@@ -77,40 +76,38 @@ public class InscricaoRepository {
                     )
                 """;
 
-        String valicadaoJogadores = "SELECT COUNT(*) FROM tb_jogador WHERE id = " + idTime;
+        String validacaoJogadores = "SELECT COUNT(*) FROM tb_jogador WHERE id_time = ?";
 
-        String sql = "INSERT INTO tb_inscricao (id_campeonato, id_time) VALUES ( ?, ?)";
+        String sql = "INSERT INTO tb_inscricao (id_campeonato, id_time) VALUES (?, ?)";
 
         try (Connection conn = ConnectionFactory.getConnection()) {
-            PreparedStatement valStmt = conn.prepareStatement(validacaoExistencia);
-            ResultSet valRs = valStmt.executeQuery();
 
+            PreparedStatement valStmt = conn.prepareStatement(validacaoExistencia);
             valStmt.setInt(1, idTime);
             valStmt.setInt(2, idCampeonato);
+            ResultSet valRs = valStmt.executeQuery();
 
             if (valRs.next()) {
                 int totalEncontrado = valRs.getInt(1);
                 if (totalEncontrado < 2) {
-                    throw new NotFoundException(); // mandar erro que não pode cadastrar uma inscriao a time ou
-                                                   // campeonatos inexistentes
+                    throw new NotFoundException();
                 }
             }
 
-            PreparedStatement jogStmt = conn.prepareStatement(valicadaoJogadores);
+            PreparedStatement jogStmt = conn.prepareStatement(validacaoJogadores);
+            jogStmt.setInt(1, idTime);
             ResultSet jogRs = jogStmt.executeQuery();
 
             if (jogRs.next()) {
                 int totalEncontrado = jogRs.getInt(1);
                 if (totalEncontrado < 5) {
-                    throw new NotFoundException(); // mandar erro que não pode cadastrar time sem pelo menos 5 jogadores
+                    throw new NotFoundException();
                 }
             }
 
             PreparedStatement stmt = conn.prepareStatement(sql);
-
             stmt.setInt(1, idCampeonato);
             stmt.setInt(2, idTime);
-
             stmt.executeUpdate();
         }
     }
@@ -142,6 +139,5 @@ public class InscricaoRepository {
 
             return stmt.executeUpdate();
         }
-
     }
 }

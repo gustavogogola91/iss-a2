@@ -4,9 +4,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import exceptions.NotFoundException;
-import models.Campeonato;
 import models.Inscricao;
+import models.Time;
+import repository.CampeonatoRepository;
 import repository.InscricaoRepository;
+import repository.TimeRepository;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -16,151 +18,89 @@ import java.util.List;
 public class InscricaoHandler implements HttpHandler {
 
     private final ObjectMapper _mapper = new ObjectMapper();
-    private final InscricaoRepository _repository = new InscricaoRepository();
+    private final InscricaoRepository _inscricaoRepository = new InscricaoRepository();
+    private final TimeRepository _timeRepository = new TimeRepository();
+    private final CampeonatoRepository _campeonatoRepository = new CampeonatoRepository();
 
     @Override
     public void handle(HttpExchange exchange) throws IOException {
-
         String metodo = exchange.getRequestMethod();
         String caminho = exchange.getRequestURI().getPath();
         String[] partesCaminho = caminho.split("/");
 
         try {
             switch (metodo) {
-                case "GET" -> {
-                    if (partesCaminho.length == 3) {
-                        buscarCampeonatoPorId(exchange, partesCaminho[2]);
-                    } else {
-                        System.out.println("Buscando campeonatos");
-                        listarCampeonatos(exchange);
-                    }
-                }
+                case "GET" -> listarInscricoes(exchange);
                 case "POST" -> adicionarInscricao(exchange);
-                case "PUT" -> {
-                    if (partesCaminho.length == 3) {
-                        alterarCampeonato(exchange, partesCaminho[2]);
-                    }else {
-                        exchange.sendResponseHeaders(400, -1);
-                    }
-                }
                 case "DELETE" -> {
                     if (partesCaminho.length == 3) {
-                        deletarCampeonato(exchange, partesCaminho[2]);
+                        deletarInscricao(exchange, partesCaminho[2]);
                     } else {
-                        exchange.sendResponseHeaders(400, -1);
+                        enviarErro(exchange, 400, "ID não informado na URL.");
                     }
                 }
                 default -> exchange.sendResponseHeaders(405, -1);
             }
 
         } catch (NotFoundException e) {
-            String mensagem = "Nenhum item encontrado. ";
-            exchange.sendResponseHeaders(404, mensagem.getBytes().length);
-
-            OutputStream os = exchange.getResponseBody();
-            os.write(mensagem.getBytes());
-
-            os.close();
+            enviarErro(exchange, 404, "Campeonato ou Time não encontrados no banco de dados.");
+        } catch (IllegalArgumentException e) {
+            enviarErro(exchange, 400, e.getMessage());
         } catch (Exception e) {
-            String mensagem = "Ocorreu um erro no servidor. " + e.getMessage();
-            exchange.sendResponseHeaders(500, mensagem.getBytes().length);
-
-            OutputStream os = exchange.getResponseBody();
-            os.write(mensagem.getBytes());
-
-            os.close();
+            enviarErro(exchange, 500, "Ocorreu um erro no servidor: " + e.getMessage());
         }
     }
 
-    private void listarCampeonatos(HttpExchange exchange) throws SQLException, IOException {
-        List<Campeonato> campeonatos = _repository.listarCampeonatos();
-
-        String resposta = _mapper.writeValueAsString(campeonatos);
-
-        enviarResposta(exchange, resposta);
-    }
-
-    private void buscarCampeonatoPorId(HttpExchange exchange, String id)
-            throws SQLException, IOException, NotFoundException {
-        Campeonato campeonato = _repository.buscarCampeonatoPorId(id);
-
-        String resposta = _mapper.writeValueAsString(campeonato);
-
-        enviarResposta(exchange, resposta);
+    private void listarInscricoes(HttpExchange exchange) throws SQLException, IOException {
+        List<Inscricao> inscricoes = _inscricaoRepository.listarInscricoes();
+        String resposta = _mapper.writeValueAsString(inscricoes);
+        enviarResposta(exchange, 200, resposta);
     }
 
     private void adicionarInscricao(HttpExchange exchange) throws SQLException, IOException, NotFoundException {
         Inscricao novaInscricao = _mapper.readValue(exchange.getRequestBody(), Inscricao.class);
 
         if (novaInscricao == null) {
-            String mensagem = "Erro no objeto enviado";
-            exchange.sendResponseHeaders(400, mensagem.getBytes().length);
-
-            OutputStream os = exchange.getResponseBody();
-            os.write(mensagem.getBytes());
-
-            os.close();
-
+            enviarErro(exchange, 400, "Erro no objeto JSON enviado");
             return;
         }
 
-        _repository.salvarInscricao(novaInscricao);
+        _campeonatoRepository.buscarCampeonatoPorId(String.valueOf(novaInscricao.getIdCampeonato()));
 
-        String resposta = "Inscricao adicionado com sucesso";
+        Time time = _timeRepository.buscarTimePorId(String.valueOf(novaInscricao.getIdTime()));
 
-        enviarResposta(exchange, resposta);
-    }
-
-    private void alterarCampeonato(HttpExchange exchange, String id) throws SQLException, IOException, NotFoundException {
-        Campeonato campeonatoAlterado = _mapper.readValue(exchange.getRequestBody(), Campeonato.class);
-
-        if (campeonatoAlterado == null || campeonatoAlterado.getNome().isBlank()) {
-            String mensagem = "Erro no objeto enviado";
-
-            exchange.sendResponseHeaders(400, mensagem.getBytes().length);
-
-            OutputStream os = exchange.getResponseBody();
-            os.write(mensagem.getBytes());
-
-            os.close();
-
-            return;
+        if (time.getJogadores().size() < 5) {
+            throw new IllegalArgumentException("Regra de Negocio: O time precisa ter pelo menos 5 jogadores cadastrados para se inscrever.");
         }
 
-        int linhasAfetadas = _repository.alterarCampeonato(campeonatoAlterado, id);
+        _inscricaoRepository.salvarInscricao(novaInscricao);
+        enviarResposta(exchange, 201, "Inscrição realizada com sucesso!");
+    }
 
-        if(linhasAfetadas == 0) {
+    private void deletarInscricao(HttpExchange exchange, String id) throws SQLException, IOException, NotFoundException {
+        int linhasAfetadas = _inscricaoRepository.deletarInscricao(id);
+
+        if (linhasAfetadas == 0) {
             throw new NotFoundException();
         }
-
-        String resposta = "Campeonato alterado com sucesso";
-
-        enviarResposta(exchange, resposta);
-
+        enviarResposta(exchange, 200, "Inscrição deletada com sucesso!");
     }
 
-    private void deletarCampeonato(HttpExchange exchange, String id) throws SQLException, IOException, NotFoundException {
-
-        int linhasAfetadas = _repository.deletarCampeonato(id);
-
-        if(linhasAfetadas == 0) {
-            throw new NotFoundException();
-        }
-
-        String resposta = "Campeonato deletado com sucesso";
-
-        enviarResposta(exchange, resposta);
-
-    }
-
-    private void enviarResposta(HttpExchange exchange, String resposta) throws IOException {
-
-        exchange.getResponseHeaders().add("Content-Type", "application/json");
-        exchange.sendResponseHeaders(200, resposta.getBytes().length);
+    private void enviarResposta(HttpExchange exchange, int statusCode, String resposta) throws IOException {
+        exchange.getResponseHeaders().add("Content-Type", "application/json; charset=UTF-8");
+        exchange.sendResponseHeaders(statusCode, resposta.getBytes("UTF-8").length);
 
         OutputStream os = exchange.getResponseBody();
-        os.write(resposta.getBytes());
+        os.write(resposta.getBytes("UTF-8"));
+        os.close();
+    }
 
+    private void enviarErro(HttpExchange exchange, int statusCode, String mensagem) throws IOException {
+        exchange.getResponseHeaders().add("Content-Type", "text/plain; charset=UTF-8");
+        exchange.sendResponseHeaders(statusCode, mensagem.getBytes("UTF-8").length);
+
+        OutputStream os = exchange.getResponseBody();
+        os.write(mensagem.getBytes("UTF-8"));
         os.close();
     }
 }

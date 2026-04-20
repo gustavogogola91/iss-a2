@@ -53,21 +53,11 @@ public class TimeHandler implements HttpHandler {
             }
 
         } catch(NotFoundException e) {
-            String mensagem = "Nenhum item encontrado. ";
-            exchange.sendResponseHeaders(404, mensagem.getBytes().length);
 
-            OutputStream os = exchange.getResponseBody();
-            os.write(mensagem.getBytes());
-
-            os.close();
+            enviarErro(exchange, 404, "Nenhum item encontrado. ");
         } catch(Exception e) {
-            String mensagem = "Ocorreu um erro no servidor. " + e.getMessage();
-            exchange.sendResponseHeaders(500, mensagem.getBytes().length);
 
-            OutputStream os = exchange.getResponseBody();
-            os.write(mensagem.getBytes());
-
-            os.close();
+            enviarErro(exchange, 500, "Ocorreu um erro no servidor. " + e.getMessage());
         }
     }
 
@@ -92,14 +82,8 @@ public class TimeHandler implements HttpHandler {
         Time movoTime = _mapper.readValue(exchange.getRequestBody(), Time.class);
 
         if(movoTime == null || movoTime.getNome().isBlank()) {
-            String mensagem = "Erro no objeto enviado";
-            exchange.sendResponseHeaders(400, mensagem.getBytes().length);
 
-            OutputStream os = exchange.getResponseBody();
-            os.write(mensagem.getBytes());
-
-            os.close();
-
+            enviarErro(exchange, 400, "Erro no objeto enviado");
             return;
         }
 
@@ -114,14 +98,8 @@ public class TimeHandler implements HttpHandler {
         Time timeAlterado = _mapper.readValue(exchange.getRequestBody(), Time.class);
 
         if(timeAlterado == null || timeAlterado.getNome().isBlank()) {
-            String mensagem = "Erro no objeto enviado";
-            exchange.sendResponseHeaders(400, mensagem.getBytes().length);
 
-            OutputStream os = exchange.getResponseBody();
-            os.write(mensagem.getBytes());
-
-            os.close();
-
+            enviarErro(exchange, 400, "Erro no objeto enviado");
             return;
         }
 
@@ -155,6 +133,17 @@ public class TimeHandler implements HttpHandler {
 
         OutputStream os = exchange.getResponseBody();
         os.write(resposta.getBytes());
+
+        os.close();
+    }
+
+    private void enviarErro(HttpExchange exchange, int statusCode, String mensagem) throws IOException {
+
+        exchange.getResponseHeaders().add("Content-Type", "text/plain; charset=UTF-8");
+        exchange.sendResponseHeaders(statusCode, mensagem.getBytes("UTF-8").length);
+
+        OutputStream os = exchange.getResponseBody();
+        os.write(mensagem.getBytes());
 
         os.close();
     }

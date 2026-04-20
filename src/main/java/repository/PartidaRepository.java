@@ -3,6 +3,7 @@ package repository;
 import data.ConnectionFactory;
 import exceptions.NotFoundException;
 import models.Campeonato;
+import models.Partida;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -13,33 +14,35 @@ import java.util.List;
 
 public class PartidaRepository {
 
-    public List<Campeonato> listarCampeonatos() throws SQLException {
-        List<Campeonato> campeonatos = new ArrayList<>();
+    public List<Partida> listarPartidas() throws SQLException {
+        List<Partida> partidas = new ArrayList<>();
 
-        String sql = "SELECT * FROM tb_campeonato";
+        String sql = "SELECT * FROM tb_partida";
 
         try (Connection conn = ConnectionFactory.getConnection()) {
             PreparedStatement stmt = conn.prepareStatement(sql);
             ResultSet rs = stmt.executeQuery();
 
             while (rs.next()) {
-                Campeonato c = new Campeonato(
-                    rs.getInt("id"),
-                    rs.getString("nome"),
-                    rs.getFloat("prizepool")
-                );
+                Partida p = new Partida(
+                        rs.getInt("id"),
+                        rs.getDate("data_partida"),
+                        rs.getInt("id_campeonato"),
+                        rs.getInt("id_time_a"),
+                        rs.getInt("id_time_b"),
+                        rs.getString("resultado"));
 
-                campeonatos.add(c);
+                partidas.add(p);
             }
         }
-        return campeonatos;
+        return partidas;
     }
 
-    public Campeonato buscarCampeonatoPorId(String id) throws SQLException, NotFoundException {
+    public Partida buscarPartidaPorId(String id) throws SQLException, NotFoundException {
 
-        Campeonato campeonato;
+        Partida partida;
 
-        String sql = "SELECT * FROM tb_campeonato as a WHERE a.id = (?)";
+        String sql = "SELECT * FROM tb_partida as a WHERE a.id = (?)";
 
         try (Connection conn = ConnectionFactory.getConnection()) {
             PreparedStatement stmt = conn.prepareStatement(sql);
@@ -50,30 +53,67 @@ public class PartidaRepository {
 
             ResultSet rs = stmt.executeQuery();
 
-            if(!rs.next()) {
+            if (!rs.next()) {
                 throw new NotFoundException();
-            };
+            }
+            ;
 
-            campeonato = new Campeonato(
+            partida = new Partida(
                     rs.getInt("id"),
-                    rs.getString("nome"),
-                    rs.getFloat("prizepool")
-            );
+                    rs.getDate("data_partida"),
+                    rs.getInt("id_campeonato"),
+                    rs.getInt("id_time_a"),
+                    rs.getInt("id_time_b"),
+                    rs.getString("resultado"));
         }
 
-        return campeonato;
+        return partida;
     }
 
-    public void salvarCampeonato(Campeonato novoCampeonato) throws SQLException {
+    public List<Partida> buscarPartidaPorCampeonatoId(String idCampeonato) throws SQLException, NotFoundException {
 
-        String sql = "INSERT INTO tb_campeonato (nome, prizepool) VALUES ( ?, ?)";
+        List<Partida> partidas = new ArrayList<>();
+
+        String sql = "SELECT * FROM tb_partida WHERE id_campeonato = (?)";
+
+        int intIdCampeonato = Integer.parseInt(idCampeonato);
 
         try (Connection conn = ConnectionFactory.getConnection()) {
             PreparedStatement stmt = conn.prepareStatement(sql);
 
-            stmt.setString(1, novoCampeonato.getNome());
-            stmt.setFloat(2, novoCampeonato.getPrizepool());
+            stmt.setInt(1, intIdCampeonato);
 
+            ResultSet rs = stmt.executeQuery();
+
+            while (rs.next()) {
+                Partida p = new Partida(
+                        rs.getInt("id"),
+                        rs.getDate("data_partida"),
+                        rs.getInt("id_campeonato"),
+                        rs.getInt("id_time_a"),
+                        rs.getInt("id_time_b"),
+                        rs.getString("resultado"));
+                partidas.add(p);
+            }
+        }
+        return partidas;
+    }
+
+    public void salvarPartida(Partida novoPartida) throws SQLException {
+
+        //fazer validação
+
+        String sql = "INSERT INTO tb_campeonato (id_campeonato, id_time_a, id_time_b, data_partida, resultado) VALUES ( ?, ?, ? , ?, ?)";
+
+        try (Connection conn = ConnectionFactory.getConnection()) {
+            PreparedStatement stmt = conn.prepareStatement(sql);
+
+            stmt.setInt(1, novoPartida.getIdCampeonato());
+            stmt.setInt(2, novoPartida.getIdTimeA());
+            stmt.setInt(3, novoPartida.getIdTimeB());
+            stmt.setString(4, novoPartida.getData().toString());
+            stmt.setString(5, novoPartida.getResultado());
+            
             stmt.executeUpdate();
         }
     }
@@ -93,18 +133,18 @@ public class PartidaRepository {
         }
     }
 
-    public int deletarCampeonato(String id) throws SQLException{
+    public int deletarCampeonato(String id) throws SQLException {
         String sql = "DELETE FROM tb_campeonato WHERE id = ?";
 
         int idInt = Integer.parseInt(id);
 
-        try(Connection conn = ConnectionFactory.getConnection()) {
+        try (Connection conn = ConnectionFactory.getConnection()) {
             PreparedStatement stmt = conn.prepareStatement(sql);
 
             stmt.setInt(1, idInt);
 
             return stmt.executeUpdate();
-        } 
+        }
 
     }
 }

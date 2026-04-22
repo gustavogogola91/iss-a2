@@ -2,7 +2,6 @@ package repository;
 
 import data.ConnectionFactory;
 import exceptions.NotFoundException;
-import models.Campeonato;
 import models.Partida;
 
 import java.sql.Connection;
@@ -42,7 +41,7 @@ public class PartidaRepository {
 
         Partida partida;
 
-        String sql = "SELECT * FROM tb_partida as a WHERE a.id = (?)";
+        String sql = "SELECT * FROM tb_partida WHERE id = (?)";
 
         try (Connection conn = ConnectionFactory.getConnection()) {
             PreparedStatement stmt = conn.prepareStatement(sql);
@@ -56,7 +55,6 @@ public class PartidaRepository {
             if (!rs.next()) {
                 throw new NotFoundException();
             }
-            ;
 
             partida = new Partida(
                     rs.getInt("id"),
@@ -101,9 +99,7 @@ public class PartidaRepository {
 
     public void salvarPartida(Partida novoPartida) throws SQLException {
 
-        //fazer validação
-
-        String sql = "INSERT INTO tb_campeonato (id_campeonato, id_time_a, id_time_b, data_partida, resultado) VALUES ( ?, ?, ? , ?, ?)";
+        String sql = "INSERT INTO tb_partida (id_campeonato, id_time_a, id_time_b, data_partida, resultado) VALUES ( ?, ?, ? , ?, ?)";
 
         try (Connection conn = ConnectionFactory.getConnection()) {
             PreparedStatement stmt = conn.prepareStatement(sql);
@@ -111,30 +107,34 @@ public class PartidaRepository {
             stmt.setInt(1, novoPartida.getIdCampeonato());
             stmt.setInt(2, novoPartida.getIdTimeA());
             stmt.setInt(3, novoPartida.getIdTimeB());
-            stmt.setString(4, novoPartida.getData().toString());
+            stmt.setDate(4, novoPartida.getData());
             stmt.setString(5, novoPartida.getResultado());
             
             stmt.executeUpdate();
         }
     }
 
-    public int alterarCampeonato(Campeonato campeonatoAlterado, String id) throws SQLException {
-        String sql = "UPDATE tb_campeonato SET nome = ?, prizepool = ? WHERE id = ?";
+    public int alterarPartida(Partida partidaAlterado, String id) throws SQLException {
+        String sql = "UPDATE tb_partida SET id_campeonato = ?, id_time_a = ?, id_time_b = ?, " +
+                "data_partida = ?, resultado = ? WHERE id = ?";
         int idInt = Integer.parseInt(id);
 
         try (Connection conn = ConnectionFactory.getConnection()) {
             PreparedStatement stmt = conn.prepareStatement(sql);
 
-            stmt.setString(1, campeonatoAlterado.getNome());
-            stmt.setFloat(2, campeonatoAlterado.getPrizepool());
-            stmt.setInt(3, idInt);
+            stmt.setInt(1, partidaAlterado.getIdCampeonato());
+            stmt.setInt(2, partidaAlterado.getIdTimeA());
+            stmt.setInt(3, partidaAlterado.getIdTimeB());
+            stmt.setDate(4, partidaAlterado.getData());
+            stmt.setString(5, partidaAlterado.getResultado());
+            stmt.setInt(6, idInt);
 
             return stmt.executeUpdate();
         }
     }
 
-    public int deletarCampeonato(String id) throws SQLException {
-        String sql = "DELETE FROM tb_campeonato WHERE id = ?";
+    public int deletarPartida(String id) throws SQLException {
+        String sql = "DELETE FROM tb_partida WHERE id = ?";
 
         int idInt = Integer.parseInt(id);
 

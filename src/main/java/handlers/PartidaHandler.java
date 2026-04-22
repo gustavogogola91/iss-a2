@@ -4,9 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import exceptions.NotFoundException;
-import models.Campeonato;
 import models.Partida;
-import repository.CampeonatoRepository;
 import repository.PartidaRepository;
 
 import java.io.IOException;
@@ -29,24 +27,30 @@ public class PartidaHandler implements HttpHandler {
         try {
             switch (metodo) {
                 case "GET" -> {
-                    if (partesCaminho.length == 3) {
-                        buscarCampeonatoPorId(exchange, partesCaminho[2]);
-                    } else {
+                    if (partesCaminho.length >= 3) {
+                        if(partesCaminho[2].equals("por_campeonato") ) {
+                            buscarPartidaPorCampeonatoId(exchange, partesCaminho[3]);
+                        } else {
+                            buscarPartidaPorId(exchange, partesCaminho[2]);
+                        }
+                    }
+
+                    else {
                         System.out.println("Buscando campeonatos");
-                        listarCampeonatos(exchange);
+                        listarPartidas(exchange);
                     }
                 }
                 case "POST" -> adicionarPartida(exchange);
                 case "PUT" -> {
                     if (partesCaminho.length == 3) {
-                        alterarCampeonato(exchange, partesCaminho[2]);
+                        alterarPartida(exchange, partesCaminho[2]);
                     } else {
                         exchange.sendResponseHeaders(400, -1);
                     }
                 }
                 case "DELETE" -> {
                     if (partesCaminho.length == 3) {
-                        deletarCampeonato(exchange, partesCaminho[2]);
+                        deletarPartida(exchange, partesCaminho[2]);
                     } else {
                         exchange.sendResponseHeaders(400, -1);
                     }
@@ -73,19 +77,27 @@ public class PartidaHandler implements HttpHandler {
         }
     }
 
-    private void listarCampeonatos(HttpExchange exchange) throws SQLException, IOException {
-        List<Campeonato> campeonatos = _repository.listarCampeonatos();
+    private void listarPartidas(HttpExchange exchange) throws SQLException, IOException {
+        List<Partida> partidas = _repository.listarPartidas();
 
-        String resposta = _mapper.writeValueAsString(campeonatos);
+        String resposta = _mapper.writeValueAsString(partidas);
 
         enviarResposta(exchange, resposta);
     }
 
-    private void buscarCampeonatoPorId(HttpExchange exchange, String id)
+    private void buscarPartidaPorId(HttpExchange exchange, String id)
             throws SQLException, IOException, NotFoundException {
-        Campeonato campeonato = _repository.buscarCampeonatoPorId(id);
+        Partida partida = _repository.buscarPartidaPorId(id);
 
-        String resposta = _mapper.writeValueAsString(campeonato);
+        String resposta = _mapper.writeValueAsString(partida);
+
+        enviarResposta(exchange, resposta);
+    }
+
+    private void buscarPartidaPorCampeonatoId(HttpExchange exchange, String campeonatoId) throws SQLException, IOException, NotFoundException {
+        List<Partida> partidas = _repository.buscarPartidaPorCampeonatoId(campeonatoId);
+
+        String resposta = _mapper.writeValueAsString(partidas);
 
         enviarResposta(exchange, resposta);
     }
@@ -112,11 +124,11 @@ public class PartidaHandler implements HttpHandler {
         enviarResposta(exchange, resposta);
     }
 
-    private void alterarCampeonato(HttpExchange exchange, String id)
+    private void alterarPartida(HttpExchange exchange, String id)
             throws SQLException, IOException, NotFoundException {
-        Campeonato campeonatoAlterado = _mapper.readValue(exchange.getRequestBody(), Campeonato.class);
+        Partida partidaAlterado = _mapper.readValue(exchange.getRequestBody(), Partida.class);
 
-        if (campeonatoAlterado == null || campeonatoAlterado.getNome().isBlank()) {
+        if (partidaAlterado == null || partidaAlterado.getIdCampeonato() == 0) {
             String mensagem = "Erro no objeto enviado";
 
             exchange.sendResponseHeaders(400, mensagem.getBytes().length);
@@ -129,28 +141,28 @@ public class PartidaHandler implements HttpHandler {
             return;
         }
 
-        int linhasAfetadas = _repository.alterarCampeonato(campeonatoAlterado, id);
+        int linhasAfetadas = _repository.alterarPartida(partidaAlterado, id);
 
         if (linhasAfetadas == 0) {
             throw new NotFoundException();
         }
 
-        String resposta = "Campeonato alterado com sucesso";
+        String resposta = "Partida alterado com sucesso";
 
         enviarResposta(exchange, resposta);
 
     }
 
-    private void deletarCampeonato(HttpExchange exchange, String id)
+    private void deletarPartida(HttpExchange exchange, String id)
             throws SQLException, IOException, NotFoundException {
 
-        int linhasAfetadas = _repository.deletarCampeonato(id);
+        int linhasAfetadas = _repository.deletarPartida(id);
 
         if (linhasAfetadas == 0) {
             throw new NotFoundException();
         }
 
-        String resposta = "Campeonato deletado com sucesso";
+        String resposta = "Partida deletado com sucesso";
 
         enviarResposta(exchange, resposta);
 

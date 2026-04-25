@@ -1,6 +1,7 @@
 package repository;
 
 import data.ConnectionFactory;
+import exceptions.NotFoundException;
 import models.Inscricao;
 
 import java.sql.Connection;
@@ -12,13 +13,51 @@ import java.util.List;
 
 public class InscricaoRepository {
 
-    public void salvarInscricao(Inscricao inscricao) throws SQLException {
+    public void salvarInscricao(Inscricao novaInscricao) throws SQLException, NotFoundException {
+
+        int idTime = novaInscricao.getIdTime();
+        int idCampeonato = novaInscricao.getIdCampeonato();
+
+        String validacaoExistencia = """
+                    SELECT COUNT(*) FROM (
+                        SELECT 1 FROM tb_time WHERE id = ?
+                        UNION ALL
+                        SELECT 1 FROM tb_campeonato WHERE id = ?
+                    )
+                """;
+
+        String validacaoJogadores = "SELECT COUNT(*) FROM tb_jogador WHERE id_time = ?";
+
         String sql = "INSERT INTO tb_inscricao (id_campeonato, id_time) VALUES (?, ?)";
 
         try (Connection conn = ConnectionFactory.getConnection()) {
+
+            PreparedStatement valStmt = conn.prepareStatement(validacaoExistencia);
+            valStmt.setInt(1, idTime);
+            valStmt.setInt(2, idCampeonato);
+            ResultSet valRs = valStmt.executeQuery();
+
+            if (valRs.next()) {
+                int totalEncontrado = valRs.getInt(1);
+                if (totalEncontrado < 2) {
+                    throw new NotFoundException();
+                }
+            }
+
+            PreparedStatement jogStmt = conn.prepareStatement(validacaoJogadores);
+            jogStmt.setInt(1, idTime);
+            ResultSet jogRs = jogStmt.executeQuery();
+
+            if (jogRs.next()) {
+                int totalEncontrado = jogRs.getInt(1);
+                if (totalEncontrado < 5) {
+                    throw new NotFoundException();
+                }
+            }
+
             PreparedStatement stmt = conn.prepareStatement(sql);
-            stmt.setInt(1, inscricao.getIdCampeonato());
-            stmt.setInt(2, inscricao.getIdTime());
+            stmt.setInt(1, idCampeonato);
+            stmt.setInt(2, idTime);
             stmt.executeUpdate();
         }
     }

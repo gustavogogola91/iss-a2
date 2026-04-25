@@ -90,7 +90,7 @@ public class JogadorHandler implements HttpHandler {
         enviarResposta(exchange, resposta);
     }
 
-    private void adicionarJogador(HttpExchange exchange) throws IOException, SQLException {
+    private void adicionarJogador(HttpExchange exchange) throws IOException, SQLException, NotFoundException {
         Jogador novoJogador = _mapper.readValue(exchange.getRequestBody(), Jogador.class);
 
         if (novoJogador == null || novoJogador.getNome().isBlank()) {

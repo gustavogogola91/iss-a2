@@ -97,11 +97,56 @@ public class PartidaRepository {
         return partidas;
     }
 
-    public void salvarPartida(Partida novoPartida) throws SQLException {
+    public void salvarPartida(Partida novoPartida) throws SQLException, NotFoundException {
 
         String sql = "INSERT INTO tb_partida (id_campeonato, id_time_a, id_time_b, data_partida, resultado) VALUES ( ?, ?, ? , ?, ?)";
+        String campeoanto_validacao = "SELECT COUNT(*) FROM tb_campeonato WHERE id = (?)";
+
+        String timeA_inscrito_validacao = "SELECT COUNT(*) FROM tb_inscricao WHERE id_campeonato = (?) AND id_time = (?)";
+        String timeB_inscrito_validacao = "SELECT COUNT(*) FROM tb_inscricao WHERE id_campeonato = (?) AND id_time = (?)";
+
 
         try (Connection conn = ConnectionFactory.getConnection()) {
+
+            PreparedStatement valCampStmt = conn.prepareStatement(campeoanto_validacao);
+            valCampStmt.setInt(1, novoPartida.getIdCampeonato());
+
+            PreparedStatement valTimeAStmt = conn.prepareStatement(timeA_inscrito_validacao);
+            PreparedStatement valTimeBStmt = conn.prepareStatement(timeB_inscrito_validacao);
+
+            valTimeAStmt.setInt(1, novoPartida.getIdCampeonato());
+            valTimeAStmt.setInt(2, novoPartida.getIdTimeA());
+
+            valTimeBStmt.setInt(1, novoPartida.getIdCampeonato());
+            valTimeBStmt.setInt(2, novoPartida.getIdTimeB());
+
+            ResultSet valRsCamp = valCampStmt.executeQuery();
+
+            if (valRsCamp.next()) {
+                int totalEncontrado = valRsCamp.getInt(1);
+                if (totalEncontrado < 1) {
+                    throw new NotFoundException();
+                }
+            }
+
+            ResultSet valTimeA = valTimeAStmt.executeQuery();
+
+            if (valTimeA.next()) {
+                int totalEncontrado = valTimeA.getInt(1);
+                if (totalEncontrado < 1) {
+                    throw new NotFoundException();
+                }
+            }
+
+            ResultSet valTimeB = valTimeBStmt.executeQuery();
+
+            if (valTimeB.next()) {
+                int totalEncontrado = valTimeB.getInt(1);
+                if (totalEncontrado < 1) {
+                    throw new NotFoundException();
+                }
+            }
+
             PreparedStatement stmt = conn.prepareStatement(sql);
 
             stmt.setInt(1, novoPartida.getIdCampeonato());

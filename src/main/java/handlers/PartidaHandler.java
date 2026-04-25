@@ -102,7 +102,9 @@ public class PartidaHandler implements HttpHandler {
         enviarResposta(exchange, resposta);
     }
 
-    private void adicionarPartida(HttpExchange exchange) throws SQLException, IOException {
+    
+
+    private void adicionarPartida(HttpExchange exchange) throws SQLException, IOException, NotFoundException {
         Partida novaPartida = _mapper.readValue(exchange.getRequestBody(), Partida.class);
 
         if (novaPartida == null) {

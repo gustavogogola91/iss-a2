@@ -62,10 +62,24 @@ public class JogadorRepository {
         return jogador;
     }
 
-    public void adicionarJogador(Jogador jogador) throws SQLException {
+    public void adicionarJogador(Jogador jogador) throws SQLException, NotFoundException {
         String sql = "INSERT INTO tb_jogador (nome, id_time) VALUES (?, ?)";
+
+        String time_validacao = "SELECT COUNT(*) FROM tb_time WHERE id = (?)";
  
         try (Connection conn = ConnectionFactory.getConnection()) {
+
+            PreparedStatement valStmt = conn.prepareStatement(time_validacao);
+            valStmt.setInt(1, jogador.getTimeId());
+
+            ResultSet valRs = valStmt.executeQuery();
+
+            if (valRs.next()) {
+                int totalEncontrado = valRs.getInt(1);
+                if (totalEncontrado < 1) {
+                    throw new NotFoundException();
+                }
+            }
 
             PreparedStatement stmt = conn.prepareStatement(sql);
 

@@ -1,8 +1,8 @@
 # Sistema de Gerenciamento de Campeonatos de Futebol
 
-API RESTful desenvolvida em Java puro para gerenciamento de times, jogadores, campeonatos, inscrições e partidas de futebol.
+API REST desenvolvida em Java para gerenciamento de times, jogadores, campeonatos, inscrições e partidas de futebol.
 
-## 👨‍💻 Alunos
+## Alunos
 
 | Nome | RGM |
 |---|---|
@@ -13,7 +13,7 @@ API RESTful desenvolvida em Java puro para gerenciamento de times, jogadores, ca
 
 ---
 
-## 🛠️ Tecnologias Utilizadas
+## Tecnologias Utilizadas
 
 - **Java 26**
 - **Maven** — gerenciamento de dependências
@@ -23,7 +23,7 @@ API RESTful desenvolvida em Java puro para gerenciamento de times, jogadores, ca
 
 ---
 
-## ⚙️ Funcionamento do Sistema
+## Funcionamento do Sistema
 
 O sistema expõe uma API HTTP que roda na porta **4321**. Cada recurso possui seu próprio contexto (rota base) e handler responsável por interpretar o método HTTP e executar a operação correspondente no banco de dados via JDBC.
 
@@ -47,7 +47,7 @@ Cada camada tem responsabilidade bem definida:
 
 ---
 
-## 🗄️ Modelo de Dados
+## Modelo de Dados
 
 ```sql
 tb_time        (id, nome)
@@ -59,7 +59,7 @@ tb_partida     (id, id_campeonato FK, id_time_a FK, id_time_b FK, data_partida, 
 
 ---
 
-## 📋 Endpoints
+## Endpoints
 
 ### `/jogador`
 
@@ -105,8 +105,6 @@ tb_partida     (id, id_campeonato FK, id_time_a FK, id_time_b FK, data_partida, 
 | `POST` | `/inscricao` | Inscreve um time em um campeonato | `{ "idCampeonato": int, "idTime": int }` |
 | `DELETE` | `/inscricao/{id}` | Remove uma inscrição | — |
 
-> ⚠️ **Regra de Negócio aplicada neste endpoint** — ver seção abaixo.
-
 ---
 
 ### `/partida`
@@ -122,7 +120,7 @@ tb_partida     (id, id_campeonato FK, id_time_a FK, id_time_b FK, data_partida, 
 
 ---
 
-## 📐 Regras de Negócio
+## Regras de Negócio
 
 ### Mínimo de jogadores para inscrição
 
@@ -146,7 +144,7 @@ Regra de Negocio: Time A não possui inscrição válida.
 
 ---
 
-## 🔁 Respostas HTTP
+## Respostas HTTP
 
 | Código | Significado |
 |--------|-------------|
@@ -159,7 +157,7 @@ Regra de Negocio: Time A não possui inscrição válida.
 
 ---
 
-## 🚀 Como Executar
+## Como Executar
 
 **Pré-requisitos:** Java 26, Maven e PostgreSQL instalados.
 

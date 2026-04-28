@@ -3,6 +3,7 @@ package handlers;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
+import exceptions.InvalidInscriptionException;
 import exceptions.NotFoundException;
 import models.Partida;
 import repository.PartidaRepository;
@@ -66,6 +67,14 @@ public class PartidaHandler implements HttpHandler {
             os.write(mensagem.getBytes());
 
             os.close();
+        } catch(InvalidInscriptionException e) {
+            String mensagem = e.getMessage();
+            exchange.sendResponseHeaders(400, mensagem.getBytes().length);
+
+            OutputStream os = exchange.getResponseBody();
+            os.write(mensagem.getBytes());
+
+            os.close();
         } catch (Exception e) {
             String mensagem = "Ocorreu um erro no servidor. " + e.getMessage();
             exchange.sendResponseHeaders(500, mensagem.getBytes().length);
@@ -104,10 +113,10 @@ public class PartidaHandler implements HttpHandler {
 
     
 
-    private void adicionarPartida(HttpExchange exchange) throws SQLException, IOException, NotFoundException {
+    private void adicionarPartida(HttpExchange exchange) throws SQLException, IOException, NotFoundException, InvalidInscriptionException {
         Partida novaPartida = _mapper.readValue(exchange.getRequestBody(), Partida.class);
 
-        if (novaPartida == null) {
+        if (novaPartida == null || novaPartida.getIdTimeA() == novaPartida.getIdTimeB()) {
             String mensagem = "Erro no objeto enviado";
             exchange.sendResponseHeaders(400, mensagem.getBytes().length);
 

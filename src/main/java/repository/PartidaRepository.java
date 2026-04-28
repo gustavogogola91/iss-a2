@@ -1,6 +1,7 @@
 package repository;
 
 import data.ConnectionFactory;
+import exceptions.InvalidInscriptionException;
 import exceptions.NotFoundException;
 import models.Partida;
 
@@ -97,7 +98,7 @@ public class PartidaRepository {
         return partidas;
     }
 
-    public void salvarPartida(Partida novoPartida) throws SQLException, NotFoundException {
+    public void salvarPartida(Partida novoPartida) throws SQLException, NotFoundException, InvalidInscriptionException {
 
         String sql = "INSERT INTO tb_partida (id_campeonato, id_time_a, id_time_b, data_partida, resultado) VALUES ( ?, ?, ? , ?, ?)";
         String campeoanto_validacao = "SELECT COUNT(*) FROM tb_campeonato WHERE id = (?)";
@@ -134,7 +135,7 @@ public class PartidaRepository {
             if (valTimeA.next()) {
                 int totalEncontrado = valTimeA.getInt(1);
                 if (totalEncontrado < 1) {
-                    throw new NotFoundException();
+                    throw new InvalidInscriptionException("Regra de Negocio: Time A não possui inscrição válida.");
                 }
             }
 
@@ -143,7 +144,7 @@ public class PartidaRepository {
             if (valTimeB.next()) {
                 int totalEncontrado = valTimeB.getInt(1);
                 if (totalEncontrado < 1) {
-                    throw new NotFoundException();
+                    throw new InvalidInscriptionException("Regra de Negocio: Time B não possui inscrição válida.");
                 }
             }
 

@@ -124,7 +124,7 @@ tb_partida     (id, id_campeonato FK, id_time_a FK, id_time_b FK, data_partida, 
 
 ## 📐 Regras de Negócio
 
-### RN01 — Mínimo de jogadores para inscrição
+### Mínimo de jogadores para inscrição
 
 > Um time só pode ser inscrito em um campeonato se possuir **no mínimo 5 jogadores** cadastrados.
 
@@ -132,6 +132,16 @@ Ao tentar realizar uma inscrição (`POST /inscricao`), o sistema busca o time i
 
 ```
 Regra de Negocio: O time precisa ter pelo menos 5 jogadores cadastrados para se inscrever.
+```
+
+### Time deve estar inscrito no campeonato
+
+> Um time só pode ser adicionado a uma partida se **possuir uma inscrição** no campeonato a qual a partida faz parte.
+
+Ao tentar realizar a criação de uma partida (`POST /partida`), o sistema busca os times informados e verifica Se possuem uma inscrição no campeonato informado. Caso algum dos times não possua inscriação, a requisição é rejeitada com status `400 Bad Request` e a seguinte mensagem:
+
+```
+Regra de Negocio: Time A não possui inscrição válida.
 ```
 
 ---
